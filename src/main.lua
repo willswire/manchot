@@ -23,7 +23,7 @@ local function setupGame()
     -- Setup penguin
     penguin:moveTo(20, 215)
     penguin.imagetable = gfx.imagetable.new("img/penguin")
-    penguin.animation = gfx.animation.loop.new(200, penguin.imagetable, true)
+    penguin.animation = gfx.animation.loop.new(100, penguin.imagetable, true)
     penguin:add()
 
     -- Setup coin
@@ -51,17 +51,11 @@ end
 setupGame()
 
 function playdate.update()
-    -- Handle input
-    -- if playdate.buttonIsPressed(playdate.kButtonUp) then
-    --     penguin:moveBy(0, -2)
-    -- end
     if playdate.buttonIsPressed(playdate.kButtonRight) then
         penguin:moveBy(2, 0)
         state = states.run
     end
-    -- if playdate.buttonIsPressed(playdate.kButtonDown) then
-    --     penguin:moveBy(0, 2)
-    -- end
+    
     if playdate.buttonIsPressed(playdate.kButtonLeft) then
         penguin:moveBy(-2, 0)
         state = states.run
