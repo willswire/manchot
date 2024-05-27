@@ -1,13 +1,13 @@
 -- Name this file `main.lua`. Your game can use multiple source files if you wish
--- (use the `require "myFilename"` command), but the simplest games can be written
+-- (use the `import "myFilename"` command), but the simplest games can be written
 -- with just `main.lua`.
 
--- You'll want to require these in just about every project you'll work on.
+-- You'll want to import these in just about every project you'll work on.
 
-require "CoreLibs/object"
-require "CoreLibs/graphics"
-require "CoreLibs/sprites"
-require "CoreLibs/timer"
+import "CoreLibs/object"
+import "CoreLibs/graphics"
+import "CoreLibs/sprites"
+import "CoreLibs/timer"
 
 -- Declaring this "gfx" shorthand will make your life easier. Instead of having
 -- to preface all graphics calls with "playdate.graphics", just use "gfx."
@@ -27,7 +27,7 @@ local function myGameSetUp()
 
     -- Set up the player sprite.
 
-    local playerImage = gfx.image.new("images/playerImage")
+    local playerImage = gfx.image.new("img/penguin")
     assert( playerImage ) -- make sure the image was where we thought
 
     playerSprite = gfx.sprite.new( playerImage )
@@ -41,7 +41,7 @@ local function myGameSetUp()
     --       and call :setZIndex() with some low number so the background stays behind
     --       your other sprites.
 
-    local backgroundImage = gfx.image.new( "images/backgroundImage" )
+    local backgroundImage = gfx.image.new( "img/background" )
     assert( backgroundImage )
 
     gfx.sprite.setBackgroundDrawingCallback(

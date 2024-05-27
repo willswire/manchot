@@ -1,5 +1,9 @@
 {
     "Lua.diagnostics.globals": [
-        "playdate"
-    ]
+        "playdate",
+        "import"
+    ],
+    "playdate-debug.sourcePath": "src/",
+    "playdate-debug.outputPath": "build/",
+    "playdate-debug.productName": "manchot"
 }

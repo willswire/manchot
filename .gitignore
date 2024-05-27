@@ -1,6 +1,9 @@
 # macOS is dumb
 *.DS_Store
 
+# project build files
+build/
+
 # Compiled Lua sources
 luac.out
 
