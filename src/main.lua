@@ -4,65 +4,170 @@ import "CoreLibs/animation"
 
 local gfx = playdate.graphics
 
-local penguin = gfx.sprite.new()
-local clock = gfx.sprite.new()
-local coin = gfx.sprite.new()
+local GROUND = 215
 
-local states = {idle = 1, run = 2}
-local state = states.idle
+-- Define the Penguin class
+class('Penguin').extends(gfx.sprite)
 
-local function setupGame()
-    -- Setup background
+function Penguin:init(x, y)
+    Penguin.super.init(self)
+    self:moveTo(x, y)
+    self.walkingImageTable = gfx.imagetable.new("img/penguin_walking")
+    self.jumpingImageTable = gfx.imagetable.new("img/penguin_jumping")
+    self.animation = gfx.animation.loop.new(100, self.walkingImageTable, true)
+    self.state = "idle"
+    self.lastDirection = "right"
+    self.velocityY = 0
+    self.gravity = 0.5
+    self.jumpStrength = -7
+    self:add()
+end
+
+function Penguin:update()
+    if self.state == "walk" then
+        self:walkUpdate()
+    elseif self.state == "jump" then
+        self:jumpUpdate()
+    else
+        self:idleUpdate()
+    end
+end
+
+function Penguin:walk(direction)
+    if self.state ~= "jump" then
+        self.state = "walk"
+        self.lastDirection = direction
+        local moveX = direction == "right" and 2 or -2
+        self:moveBy(moveX, 0)
+        playdate.timer.performAfterDelay(100, function()
+            if self.state == "walk" then
+                self.state = "idle"
+            end
+        end)
+    end
+end
+
+function Penguin:jump()
+    if self.state ~= "jump" then
+        self.state = "jump"
+        self.velocityY = self.jumpStrength
+        self.animation = gfx.animation.loop.new(100, self.jumpingImageTable, true)
+    end
+end
+
+function Penguin:walkUpdate()
+    self:setImage(self.animation:image())
+end
+
+function Penguin:jumpUpdate()
+    self:setImage(self.jumpingImageTable:getImage(2))
+    self:applyGravity()
+    local moveX = self.lastDirection == "right" and 2 or -2
+    self:moveBy(moveX, self.velocityY)
+
+    if self:isOnGround() then
+        self.state = "idle"
+        self.velocityY = 0
+        self.animation = gfx.animation.loop.new(100, self.walkingImageTable, true)
+    end
+end
+
+function Penguin:idleUpdate()
+    local penguinImage = gfx.image.new("img/penguin_standing")
+    self:setImage(penguinImage)
+end
+
+function Penguin:applyGravity()
+    self.velocityY = self.velocityY + self.gravity
+end
+
+function Penguin:isOnGround()
+    local _, y = self:getPosition()
+    return y >= GROUND
+end
+
+-- Define the Coin class
+class('Coin').extends(gfx.sprite)
+
+function Coin:init(x, y)
+    Coin.super.init(self)
+    local coinImage = gfx.image.new("img/coin")
+    self:setImage(coinImage)
+    self:moveTo(x, y)
+    self:add()
+end
+
+-- Define the Clock class
+class('Clock').extends(gfx.sprite)
+
+function Clock:init(x, y)
+    Clock.super.init(self)
+    local clockImage = gfx.image.new("img/clock")
+    self:setImage(clockImage)
+    self:moveTo(x, y)
+    self:add()
+end
+
+-- Define the Platform class
+class('Platform').extends(gfx.sprite)
+
+function Platform:init(x, y)
+    Platform.super.init(self)
+    local platformImage = gfx.image.new("img/platform")
+    self:setImage(platformImage)
+    self:moveTo(x, y)
+    self:add()
+end
+
+-- Setup background
+local function setupBackground()
     local backgroundImage = gfx.image.new("img/background")
     gfx.sprite.setBackgroundDrawingCallback(
         function(x, y, width, height)
             backgroundImage:draw(0, 0)
         end
     )
-
-    -- Setup penguin
-    penguin:moveTo(20, 215)
-    penguin.imagetable = gfx.imagetable.new("img/penguin")
-    penguin.animation = gfx.animation.loop.new(100, penguin.imagetable, true)
-    penguin:add()
-
-    -- Setup coin
-    local coinImage = gfx.image.new("img/coin")
-    coin:setImage(coinImage)
-    coin:moveTo(370, 10)
-    coin:add()
-
-    -- Setup clock
-    local clockImage = gfx.image.new("img/clock")
-    clock:setImage(clockImage)
-    clock:moveTo(390, 10)
-    clock:add()
 end
 
-function penguin:update()
-    if state == states.run then
-        self:setImage(self.animation:image())
-    else
-        local penguinImage = gfx.image.new("img/penguin")
-        self:setImage(penguinImage)
+-- Setup game objects
+local function setupGameObjects()
+    local penguin = Penguin(20, GROUND)
+    local coin = Coin(370, 10)
+    local clock = Clock(390, 10)
+    local platform = Platform(200, 195)
+    return penguin
+end
+
+-- Game loop
+local function gameLoop(penguin)
+    function playdate.update()
+        local isJumping = playdate.buttonIsPressed(playdate.kButtonUp)
+        local isWalkingRight = playdate.buttonIsPressed(playdate.kButtonRight)
+        local isWalkingLeft = playdate.buttonIsPressed(playdate.kButtonLeft)
+        
+        if isJumping then
+            penguin:jump()
+        elseif isWalkingRight then
+            penguin:walk("right")
+        elseif isWalkingLeft then
+            penguin:walk("left")
+        else
+            if penguin.state == "walk" then
+                penguin.state = "idle"
+            end
+        end
+
+        -- Update sprites and timers
+        gfx.sprite.update()
+        playdate.timer.updateTimers()
     end
 end
 
-setupGame()
-
-function playdate.update()
-    if playdate.buttonIsPressed(playdate.kButtonRight) then
-        penguin:moveBy(2, 0)
-        state = states.run
-    end
-    
-    if playdate.buttonIsPressed(playdate.kButtonLeft) then
-        penguin:moveBy(-2, 0)
-        state = states.run
-    end
-
-    -- Update sprites and timers
-    gfx.sprite.update()
-    playdate.timer.updateTimers()
-    state = states.idle
+-- Main function to start the game
+local function play()
+    setupBackground()
+    local penguin = setupGameObjects()
+    gameLoop(penguin)
 end
+
+play()
