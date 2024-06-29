@@ -4,7 +4,7 @@ import "CoreLibs/animation"
 
 local gfx = playdate.graphics
 
-local GROUND = 215
+local GROUND = 198
 
 -- Define the Penguin class
 class('Penguin').extends(gfx.sprite)
@@ -19,7 +19,8 @@ function Penguin:init(x, y)
     self.lastDirection = "right"
     self.velocityY = 0
     self.gravity = 0.5
-    self.jumpStrength = -7
+    self.jumpStrength = -10
+    self:setCollideRect(0, 0, 30, 30)
     self:add()
 end
 
@@ -38,7 +39,7 @@ function Penguin:walk(direction)
         self.state = "walk"
         self.lastDirection = direction
         local moveX = direction == "right" and 2 or -2
-        self:moveBy(moveX, 0)
+        self:moveWithCollisions(self.x + moveX, self.y)
         playdate.timer.performAfterDelay(100, function()
             if self.state == "walk" then
                 self.state = "idle"
@@ -63,7 +64,21 @@ function Penguin:jumpUpdate()
     self:setImage(self.jumpingImageTable:getImage(2))
     self:applyGravity()
     local moveX = self.lastDirection == "right" and 2 or -2
-    self:moveBy(moveX, self.velocityY)
+    local actualX, actualY, collisions, length = self:moveWithCollisions(self.x + moveX, self.y + self.velocityY)
+
+    if length > 0 then
+        for i = 1, length do
+            local collision = collisions[i]
+            if collision.other:isa(Platform) then
+                if self.velocityY > 0 then
+                    self.state = "idle"
+                    self.velocityY = 0
+                    self.y = collision.other.y - self.height / 2
+                    self.animation = gfx.animation.loop.new(100, self.walkingImageTable, true)
+                end
+            end
+        end
+    end
 
     if self:isOnGround() then
         self.state = "idle"
@@ -115,6 +130,7 @@ function Platform:init(x, y)
     Platform.super.init(self)
     local platformImage = gfx.image.new("img/platform")
     self:setImage(platformImage)
+    self:setCollideRect(0, 0, self:getImage():getSize())
     self:moveTo(x, y)
     self:add()
 end
@@ -134,14 +150,14 @@ local function setupGameObjects()
     local penguin = Penguin(20, GROUND)
     local coin = Coin(370, 10)
     local clock = Clock(390, 10)
-    local platform = Platform(200, 195)
+    local platform = Platform(200, 170)
     return penguin
 end
 
 -- Game loop
 local function gameLoop(penguin)
     function playdate.update()
-        local isJumping = playdate.buttonIsPressed(playdate.kButtonUp)
+        local isJumping = playdate.buttonIsPressed(playdate.kButtonA)
         local isWalkingRight = playdate.buttonIsPressed(playdate.kButtonRight)
         local isWalkingLeft = playdate.buttonIsPressed(playdate.kButtonLeft)
         
