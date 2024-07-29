@@ -50,6 +50,9 @@ end
 
 function Penguin:jump()
     if self.state ~= "jump" then
+        local sp = playdate.sound.sampleplayer.new("audio/jump")
+        sp:play()
+
         self.state = "jump"
         self.velocityY = self.jumpStrength
         self.animation = gfx.animation.loop.new(100, self.jumpingImageTable, true)
@@ -181,6 +184,10 @@ end
 
 -- Main function to start the game
 local function play()
+    local fp = playdate.sound.fileplayer.new("audio/soundtrack")
+    fp:setLoopRange(0)
+    fp:play(0)
+
     setupBackground()
     local penguin = setupGameObjects()
     gameLoop(penguin)
