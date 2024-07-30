@@ -2,7 +2,7 @@ import "CoreLibs/sprites"
 import "CoreLibs/timer"
 import "CoreLibs/animation"
 
-local gfx = playdate.graphics
+local gfx <const> = playdate.graphics
 
 local GROUND = 198
 
@@ -12,8 +12,8 @@ class('Penguin').extends(gfx.sprite)
 function Penguin:init(x, y)
     Penguin.super.init(self)
     self:moveTo(x, y)
-    self.walkingImageTable = gfx.imagetable.new("img/penguin_walking")
-    self.jumpingImageTable = gfx.imagetable.new("img/penguin_jumping")
+    self.walkingImageTable = gfx.imagetable.new("images/penguin_walking")
+    self.jumpingImageTable = gfx.imagetable.new("images/penguin_jumping")
     self.animation = gfx.animation.loop.new(100, self.walkingImageTable, true)
     self.state = "idle"
     self.lastDirection = "right"
@@ -50,7 +50,7 @@ end
 
 function Penguin:jump()
     if self.state ~= "jump" then
-        local sp = playdate.sound.sampleplayer.new("audio/jump")
+        local sp = playdate.sound.sampleplayer.new("sounds/jump")
         sp:play()
 
         self.state = "jump"
@@ -91,7 +91,7 @@ function Penguin:jumpUpdate()
 end
 
 function Penguin:idleUpdate()
-    local penguinImage = gfx.image.new("img/penguin_standing")
+    local penguinImage = gfx.image.new("images/penguin_standing")
     self:setImage(penguinImage)
 end
 
@@ -109,7 +109,7 @@ class('Coin').extends(gfx.sprite)
 
 function Coin:init(x, y)
     Coin.super.init(self)
-    local coinImage = gfx.image.new("img/coin")
+    local coinImage = gfx.image.new("images/coin")
     self:setImage(coinImage)
     self:moveTo(x, y)
     self:add()
@@ -120,7 +120,7 @@ class('Clock').extends(gfx.sprite)
 
 function Clock:init(x, y)
     Clock.super.init(self)
-    local clockImage = gfx.image.new("img/clock")
+    local clockImage = gfx.image.new("images/clock")
     self:setImage(clockImage)
     self:moveTo(x, y)
     self:add()
@@ -131,7 +131,7 @@ class('Platform').extends(gfx.sprite)
 
 function Platform:init(x, y)
     Platform.super.init(self)
-    local platformImage = gfx.image.new("img/platform")
+    local platformImage = gfx.image.new("images/platform")
     self:setImage(platformImage)
     self:setCollideRect(0, 0, self:getImage():getSize())
     self:moveTo(x, y)
@@ -140,12 +140,16 @@ end
 
 -- Setup background
 local function setupBackground()
-    local backgroundImage = gfx.image.new("img/background")
-    gfx.sprite.setBackgroundDrawingCallback(
-        function(x, y, width, height)
-            backgroundImage:draw(0, 0)
-        end
-    )
+    local backgroundImage = gfx.image.new("images/background")
+    if backgroundImage ~= nil then
+        gfx.sprite.setBackgroundDrawingCallback(
+            function(x, y, width, height)
+                backgroundImage:draw(0, 0)
+            end
+        )
+    else
+        print("Error: Background image could not be loaded.")
+    end
 end
 
 -- Setup game objects
@@ -163,7 +167,7 @@ local function gameLoop(penguin)
         local isJumping = playdate.buttonIsPressed(playdate.kButtonA)
         local isWalkingRight = playdate.buttonIsPressed(playdate.kButtonRight)
         local isWalkingLeft = playdate.buttonIsPressed(playdate.kButtonLeft)
-        
+
         if isJumping then
             penguin:jump()
         elseif isWalkingRight then
@@ -184,8 +188,8 @@ end
 
 -- Main function to start the game
 local function play()
-    local fp = playdate.sound.fileplayer.new("audio/soundtrack")
-    fp:setLoopRange(0)
+    local fp = playdate.sound.fileplayer.new("sounds/soundtrack")
+    fp:setLoopRange(0, 18)
     fp:play(0)
 
     setupBackground()
